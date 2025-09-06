@@ -1,1 +1,7 @@
-{}
+{
+    "name": "consumer-pgmq-go",
+    "version": "1.0.0",
+    "description": "Consumer PGMQ Go",
+    "author": "Tiago Rosa da costa<tiago123456789@gmail.com>",
+    "license": "MIT"
+}
