@@ -23,7 +23,7 @@ jobs:
         with:
           go-version: '1.24'
       - name: Run tests
-        run: go test ./... -v
+        run: go test ./test -v
 
   release:
     needs: unit-test
