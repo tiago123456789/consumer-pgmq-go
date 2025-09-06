@@ -1,17 +1,12 @@
 package main
 
-
-package main
-
 import (
-	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/supabase-community/supabase-go"
 	"github.com/tiago123456789/consumer-pgmq-go/consumer"
 	queuedriver "github.com/tiago123456789/consumer-pgmq-go/consumer/queueDriver"
 )
@@ -22,7 +17,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	client, err := supabase.NewClient(API_URL, API_KEY, &supabase.ClientOptions{
+	client, err := supabase.NewClient(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_ANON_KEY"), &supabase.ClientOptions{
 		Schema: "pgmq_public",
 	})
 	if err != nil {

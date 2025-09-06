@@ -78,7 +78,7 @@ func (c *Consumer) getMessages() []Message {
 func (c *Consumer) polling() {
 	messages := c.getMessages()
 	if len(messages) == 0 && c.options.EnabledPolling {
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Duration(c.options.TimeMsWaitBeforeNextPolling) * time.Millisecond)
 		c.polling()
 	} else {
 		for _, msg := range messages {
@@ -96,7 +96,6 @@ func (c *Consumer) polling() {
 func (c *Consumer) processMessage(ctx context.Context, msg Message) error {
 	select {
 	case <-ctx.Done():
-		fmt.Println("timeout processing message")
 		return ctx.Err()
 	default:
 		err := c.handler(msg.Message)
@@ -106,7 +105,6 @@ func (c *Consumer) processMessage(ctx context.Context, msg Message) error {
 		}
 
 		if err := ctx.Err(); err != nil {
-			fmt.Println("context canceled")
 			return nil
 		}
 
@@ -142,7 +140,8 @@ func (c *Consumer) startWorker(i int) {
 			context.Background(),
 			time.Duration(c.options.VisibilityTime)*time.Second,
 		)
-		time.AfterFunc(time.Duration(c.options.VisibilityTime)*time.Second, func() {
+
+		timerToCancel := time.AfterFunc(time.Duration(c.options.VisibilityTime)*time.Second, func() {
 			cancel()
 			c.notifyEventListener(EVENT_LISTENER_ABORT_ERROR, msg, ctx.Err())
 		})
@@ -150,9 +149,13 @@ func (c *Consumer) startWorker(i int) {
 		if c.options.TotalRetriesBeforeSendToDlq > 0 &&
 			c.options.QueueNameDlq != "" &&
 			msg.ReadCT > c.options.TotalRetriesBeforeSendToDlq {
-			c.sendToDlq(ctx, msg)
+			if err := c.sendToDlq(ctx, msg); err == nil {
+				timerToCancel.Stop()
+			}
 		} else {
-			c.processMessage(ctx, msg)
+			if err := c.processMessage(ctx, msg); err == nil {
+				timerToCancel.Stop()
+			}
 		}
 	}
 }
