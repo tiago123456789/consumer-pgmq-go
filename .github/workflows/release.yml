@@ -27,7 +27,6 @@ jobs:
 
   release:
     needs: unit-test
-    if: needs.unit-test.outputs.test-result == 'success'
     name: Release
     runs-on: ubuntu-latest
     permissions:
