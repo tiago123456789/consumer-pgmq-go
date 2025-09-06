@@ -8,7 +8,26 @@ permissions:
   contents: read
 
 jobs:
+  unit-test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+      - name: Run tests
+        run: go test ./... -v
+
   release:
+    needs: unit-test
+    if: needs.unit-test.outputs.test-result == 'success'
     name: Release
     runs-on: ubuntu-latest
     permissions:
@@ -17,7 +36,6 @@ jobs:
       pull-requests: write
       id-token: write
     steps:
-      
       - name: Checkout
         uses: actions/checkout@v4
         with:
